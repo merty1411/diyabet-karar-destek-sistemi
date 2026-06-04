@@ -2,10 +2,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import random
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
-import dice_ml
-from dice_ml import Dice
+
+# --- RASTGELELİĞİ VE SAPMALARI KÖKTEN KİLİTLEME ---
+np.random.seed(42)
+random.seed(42)
 
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Diyabet Karar Destek Sistemi", layout="wide")
@@ -94,18 +97,11 @@ if df is not None:
     
     st.divider()
 
-    # --- DiCE ANALİZİ VE REHBER ---
-    from sklearn.pipeline import Pipeline
-    pipe = Pipeline([('scaler', scaler), ('model', model)])
-    d = dice_ml.Data(dataframe=df, continuous_features=list(X_features.columns), outcome_name='Outcome')
-    m = dice_ml.Model(model=pipe, backend="sklearn")
-    exp = Dice(d, m, method="random")
-
+    # --- DETERMINISTIK HEDEF HESAPLAMA (Çökmeyi Önleyen Güvenli Motor) ---
     with st.spinner('Verileriniz analiz ediliyor...'):
-        dice_exp = exp.generate_counterfactuals(user_df, total_CFs=3, desired_class=0, features_to_vary=["BMI", "Glucose", "Insulin"])
-        cf_results = dice_exp.cf_examples_list[0].final_cfs_df
-        target_bmi = cf_results['BMI'].mean()
-        target_gl = int(cf_results['Glucose'].mean())
+        target_gl = 103 if glucose > 103 else glucose
+        target_bmi = 24.5 if bmi_mevcut > 24.5 else bmi_mevcut
+        target_ins = 81 if insulin > 81 else insulin
 
     h_kilo = round(target_bmi * ((boy/100)**2), 1)
     v_kilo = round(kilo - h_kilo, 1)
@@ -116,7 +112,7 @@ if df is not None:
 
     st.subheader("📊 Sağlık Hedefleriniz")
     curr = user_df[["Glucose", "BMI", "Insulin"]].copy(); curr.index = ["Şu Anki Durum"]
-    targ = pd.DataFrame({'Glucose':[target_gl], 'BMI':[target_bmi], 'Insulin':[int(cf_results['Insulin'].mean())]}, index=["AI Hedefleri"])
+    targ = pd.DataFrame({'Glucose':[target_gl], 'BMI':[target_bmi], 'Insulin':[target_ins]}, index=["AI Hedefleri"])
     st.table(pd.concat([curr, targ]))
 
     # --- DİNAMİK REHBER KARTI ---
@@ -127,7 +123,7 @@ if df is not None:
     if v_kilo > 0:
         st.markdown(f'<div class="step-box {step_style}"><b>1. Kilo Kontrolü:</b> İdeal kilonuz <b>{h_kilo} kg</b>. Yaklaşık <b>{v_kilo} kg</b> vermeniz önerilir.</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="step-box {step_style}"><b>1. Kilo Kontrolü:</b> Kilonuz şu an ideal seviyededir. Mevcut formunuzu koruyun.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="step-box {step_style}"><b>1. Kilo Kontrolü:</b> Kilonuz şu an ideal seviyetedir. Mevcut formunuzu koruyun.</div>', unsafe_allow_html=True)
     
     # Şeker Adımı
     st.markdown(f'<div class="step-box {step_style}"><b>2. Şeker Yönetimi:</b> Kan şekerinizi <b>{target_gl}</b> seviyesine çekmek riskinizi azaltacaktır.</div>', unsafe_allow_html=True)
