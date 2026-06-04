@@ -6,14 +6,13 @@ import random
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
-# --- RASTGELELİĞİ VE SAPMALARI KÖKTEN KİLİTLEME ---
+
 np.random.seed(42)
 random.seed(42)
 
-# --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Diyabet Karar Destek Sistemi", layout="wide")
 
-# --- TASARIM (Dinamik Renkler ve Karanlık Mod Koruması) ---
+
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF !important; }
@@ -21,7 +20,7 @@ st.markdown("""
     [data-testid="stSidebar"] { background-color: #F7FAFC !important; }
     [data-testid="stSidebar"] * { color: #2D3748 !important; }
 
-    /* Genel Kart Yapısı */
+   
     .health-card {
         padding: 30px;
         border-radius: 20px;
@@ -29,9 +28,9 @@ st.markdown("""
         margin-top: 25px;
         color: #1A202C !important;
     }
-    /* Riskli Durum (Kırmızı) */
+
     .risk-high { border: 3px solid #E53E3E; background-color: #FFF5F5 !important; }
-    /* Güvenli Durum (Yeşil) */
+    
     .risk-low { border: 3px solid #38A169; background-color: #F0FFF4 !important; }
     
     .step-box {
@@ -66,7 +65,7 @@ def load_and_train():
 
 df, model, scaler, X_features = load_and_train()
 
-# --- SIDEBAR ---
+
 st.sidebar.header("📋 Hasta Bilgileri")
 with st.sidebar:
     boy = st.number_input('Boyunuz (cm)', 100, 220, 175)
@@ -82,7 +81,7 @@ with st.sidebar:
 
 user_df = pd.DataFrame({'Pregnancies':[preg], 'Glucose':[glucose], 'BloodPressure':[80], 'SkinThickness':[20], 'Insulin':[insulin], 'BMI':[bmi_mevcut], 'Pedigree':[pedigree], 'Age':[age]})
 
-# --- ANA PANEL ---
+
 st.title("🛡️ Akıllı Diyabet Yönetim Portalı")
 
 if df is not None:
@@ -97,7 +96,6 @@ if df is not None:
     
     st.divider()
 
-    # --- DETERMINISTIK HEDEF HESAPLAMA (Çökmeyi Önleyen Güvenli Motor) ---
     with st.spinner('Verileriniz analiz ediliyor...'):
         target_gl = 103 if glucose > 103 else glucose
         target_bmi = 24.5 if bmi_mevcut > 24.5 else bmi_mevcut
@@ -106,7 +104,7 @@ if df is not None:
     h_kilo = round(target_bmi * ((boy/100)**2), 1)
     v_kilo = round(kilo - h_kilo, 1)
 
-    # Renk Sınıfı Belirleme
+  
     card_style = "risk-high" if is_high_risk else "risk-low"
     step_style = "step-red" if is_high_risk else "step-green"
 
@@ -115,20 +113,20 @@ if df is not None:
     targ = pd.DataFrame({'Glucose':[target_gl], 'BMI':[target_bmi], 'Insulin':[target_ins]}, index=["AI Hedefleri"])
     st.table(pd.concat([curr, targ]))
 
-    # --- DİNAMİK REHBER KARTI ---
+
     st.markdown(f'<div class="health-card {card_style}"><h3>🩺 Sağlık Raporu ve Tavsiyeler</h3>', unsafe_allow_html=True)
     st.write(f"Yaşınız ({age}) ve genetik geçmişiniz ({pedigree}) baz alınarak hazırlanan plan:")
     
-    # Kilo Adımı
+
     if v_kilo > 0:
         st.markdown(f'<div class="step-box {step_style}"><b>1. Kilo Kontrolü:</b> İdeal kilonuz <b>{h_kilo} kg</b>. Yaklaşık <b>{v_kilo} kg</b> vermeniz önerilir.</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="step-box {step_style}"><b>1. Kilo Kontrolü:</b> Kilonuz şu an ideal seviyetedir. Mevcut formunuzu koruyun.</div>', unsafe_allow_html=True)
     
-    # Şeker Adımı
+
     st.markdown(f'<div class="step-box {step_style}"><b>2. Şeker Yönetimi:</b> Kan şekerinizi <b>{target_gl}</b> seviyesine çekmek riskinizi azaltacaktır.</div>', unsafe_allow_html=True)
     
-    # Sabit Beslenme Tablosu
+   
     st.markdown(f"""
     <div class="step-box {step_style}">
         <b>3. Yaşam Tarzı Planı:</b>
